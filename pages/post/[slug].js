@@ -1,5 +1,8 @@
+import {promises as fsPromises} from 'fs'
+import Markdown from 'markdown-to-jsx'
 import Theme from '../../components/Theme'
 import ms from 'ms'
+import Youtube from '../../components/Youtube'
 
 export default function Post ({ post }) {
   return (
@@ -8,7 +11,15 @@ export default function Post ({ post }) {
         <div className='time'>Published {ms(Date.now() - post.createdAt, { long: true })} ago</div>
         <h1>{post.title}</h1>
         <div className='content'>
-          {post.content}
+          <Markdown 
+            options={{
+              overrides: {
+                Youtube: { component: Youtube }
+              }
+            }}
+          >
+            {post.content}
+          </Markdown>
         </div>
       </div>
     </Theme>
@@ -16,12 +27,17 @@ export default function Post ({ post }) {
 }
 
 export async function getStaticPaths () {
+  const markdownFiles = await fsPromises.readdir('data')
+
+  const paths = markdownFiles.map(filename => {
+    const slug = filename.replace(/.md$/, '');
+    return {
+      params: { slug }
+    }
+  })
+
   return {
-    paths: [
-      {
-        params: { slug: '2020-July-01-Hello-World' }
-      }
-    ],
+    paths,
     fallback: false
   }
 }
@@ -31,12 +47,14 @@ export async function getStaticProps ({ params }) {
   const createdAt = (new Date(`${year} ${month} ${day}`)).getTime()
   const title = rest.join(' ')
 
+  const content = await fsPromises.readFile(`data/${params.slug}.md`, 'utf8')
+
   return {
     props: {
       post: {
         slug: params.slug,
         title,
-        content: `This is the content for ${title}`,
+        content,
         createdAt
       }
     }
