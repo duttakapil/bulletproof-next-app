@@ -5,6 +5,7 @@ import Youtube from '../../components/Youtube'
 import { getPostList, getPost } from '../../lib/data'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Comments from '../../components/Comments.js'
 
 export default function Post ({ post }) {
   const router = useRouter()
@@ -40,9 +41,11 @@ export default function Post ({ post }) {
               }
             }}
           >
-            {post.content}
+            {post.content}            
           </Markdown>
         </div>
+        <b>Comments</b>
+        <Comments slug={post.slug}/>
       </div>
     </Theme>
   )
